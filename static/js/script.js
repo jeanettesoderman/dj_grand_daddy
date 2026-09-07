@@ -47,6 +47,56 @@ if (glitchText) {
     }, 3000);
 }
 
+// YouTube channel statistics
+const youtubeVideoCount = document.querySelector("#youtube-video-count");
+const youtubeSubscriberCount = document.querySelector(
+    "#youtube-subscriber-count"
+);
+
+function formatSubscriberCount(count) {
+    if (count >= 1000000) {
+        return `${parseFloat((count / 1000000).toFixed(2))}M`;
+    }
+
+    if (count >= 1000) {
+        return `${parseFloat((count / 1000).toFixed(2))}K`;
+    }
+
+    return count.toString();
+}
+
+async function loadYouTubeStats() {
+    // Only request the data on pages containing the YouTube stat cards
+    if (!youtubeVideoCount || !youtubeSubscriberCount) {
+        return;
+    }
+
+    try {
+        const response = await fetch(
+            "https://dj-grand-daddy-youtube.jeanettesoderman73.workers.dev"
+        );
+
+        if (!response.ok) {
+            throw new Error(`YouTube API request failed: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        youtubeVideoCount.textContent = data.videoCount;
+        youtubeSubscriberCount.textContent = formatSubscriberCount(
+            data.subscriberCount
+        );
+    } catch (error) {
+        console.error("Could not load YouTube statistics:", error);
+
+        // Fallback values if YouTube data cannot be loaded
+        youtubeVideoCount.textContent = "80+";
+        youtubeSubscriberCount.textContent = "3K+";
+    }
+}
+
+loadYouTubeStats();
+
 // Intersection Observer for fade-in animations
 const observerOptions = {
     threshold: 0.1,
