@@ -136,3 +136,56 @@ if (navbar) {
         }
     });
 }
+// Contact form
+const contactForm = document.querySelector("#contact-form");
+
+if (contactForm) {
+    const submitButton = document.querySelector("#contact-submit");
+    const statusMessage = document.querySelector("#contact-status");
+
+    contactForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        submitButton.disabled = true;
+        submitButton.textContent = "Sending...";
+        statusMessage.textContent = "";
+
+        try {
+            const formData = new FormData(contactForm);
+
+            const response = await fetch(
+                "https://dj-grand-daddy-contact.jeanettesoderman73.workers.dev",
+                {
+                    method: "POST",
+                    body: formData
+                }
+            );
+
+            const result = await response.json();
+
+            if (!response.ok || !result.success) {
+                throw new Error(
+                    result.message || "The message could not be sent."
+                );
+            }
+
+            statusMessage.textContent =
+                "Thank you. Your message has been sent.";
+
+            contactForm.reset();
+
+            if (window.turnstile) {
+                window.turnstile.reset();
+            }
+        } catch (error) {
+            console.error("Contact form error:", error);
+
+            statusMessage.textContent =
+                error.message ||
+                "The message could not be sent right now.";
+        } finally {
+            submitButton.disabled = false;
+            submitButton.textContent = "Send Message";
+        }
+    });
+}
