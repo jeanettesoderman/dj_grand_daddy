@@ -29,6 +29,7 @@ async function loadYouTubeData() {
 }
 
 // Render latest release on the home page
+// Clicking the preview opens the video directly on YouTube
 function renderLatestVideo(video) {
   const container = document.querySelector("[data-latest-video]");
 
@@ -38,18 +39,52 @@ function renderLatestVideo(video) {
 
   container.replaceChildren();
 
-  const iframe = document.createElement("iframe");
+  const videoLink = document.createElement("a");
 
-  iframe.width = "100%";
-  iframe.height = "500";
-  iframe.src = `https://www.youtube.com/embed/${video.id}`;
-  iframe.title = video.title;
-  iframe.setAttribute("frameborder", "0");
-  iframe.setAttribute(
-    "allow",
-    "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  videoLink.href = video.url;
+  videoLink.target = "_blank";
+  videoLink.rel = "noopener noreferrer";
+  videoLink.setAttribute(
+    "aria-label",
+    `Watch ${video.title} on YouTube`
   );
-  iframe.setAttribute("allowfullscreen", "");
+
+  videoLink.style.width = "100%";
+  videoLink.style.display = "block";
+  videoLink.style.textDecoration = "none";
+  videoLink.style.color = "inherit";
+
+  const thumbnailContainer = document.createElement("div");
+  thumbnailContainer.className = "video-thumbnail";
+
+  const image = document.createElement("img");
+
+  image.src = video.thumbnail;
+  image.alt = `Watch ${video.title} on YouTube`;
+  image.loading = "eager";
+  image.decoding = "async";
+  image.fetchPriority = "high";
+
+  image.style.width = "100%";
+  image.style.height = "auto";
+  image.style.aspectRatio = "16 / 9";
+  image.style.objectFit = "cover";
+  image.style.display = "block";
+
+  const overlay = document.createElement("div");
+  overlay.className = "play-overlay";
+
+  overlay.style.opacity = "1";
+  overlay.style.background = "rgba(0, 0, 0, 0.25)";
+
+  const playButton = document.createElement("div");
+  playButton.className = "play-button";
+  playButton.textContent = "▶";
+
+  overlay.appendChild(playButton);
+
+  thumbnailContainer.append(image, overlay);
+  videoLink.appendChild(thumbnailContainer);
 
   const info = document.createElement("div");
   info.className = "featured-info";
@@ -61,8 +96,15 @@ function renderLatestVideo(video) {
   description.textContent =
     video.description || "Watch the latest release on YouTube.";
 
-  info.append(title, description);
-  container.append(iframe, info);
+  const youtubeNotice = document.createElement("p");
+  youtubeNotice.textContent = "Watch on YouTube";
+  youtubeNotice.style.marginTop = "0.75rem";
+  youtubeNotice.style.color = "var(--primary-color)";
+  youtubeNotice.style.fontWeight = "700";
+
+  info.append(title, description, youtubeNotice);
+
+  container.append(videoLink, info);
 }
 
 // Render all regular videos on the Music page
@@ -80,14 +122,20 @@ function renderVideoGallery(videos) {
     card.className = "video-card";
 
     const link = document.createElement("a");
+
     link.href = video.url;
     link.target = "_blank";
     link.rel = "noopener noreferrer";
+    link.setAttribute(
+      "aria-label",
+      `Watch ${video.title} on YouTube`
+    );
 
     const thumbnailContainer = document.createElement("div");
     thumbnailContainer.className = "video-thumbnail";
 
     const image = document.createElement("img");
+
     image.src = video.thumbnail;
     image.alt = video.title;
     image.decoding = "async";
@@ -104,6 +152,7 @@ function renderVideoGallery(videos) {
     playButton.textContent = "▶";
 
     overlay.appendChild(playButton);
+
     thumbnailContainer.append(image, overlay);
     link.appendChild(thumbnailContainer);
 
@@ -118,6 +167,7 @@ function renderVideoGallery(videos) {
       video.description || "Watch on YouTube.";
 
     info.append(title, description);
+
     card.append(link, info);
     grid.appendChild(card);
   });
