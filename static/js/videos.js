@@ -28,6 +28,85 @@ async function loadYouTubeData() {
   }
 }
 
+// Create the responsive thumbnail used for the latest release
+function createLatestThumbnail(video) {
+  const picture = document.createElement("picture");
+
+  picture.style.display = "block";
+  picture.style.width = "100%";
+
+  // Smaller WebP thumbnail for mobile devices
+  const mobileWebp = document.createElement("source");
+
+  mobileWebp.type = "image/webp";
+  mobileWebp.media = "(max-width: 768px)";
+  mobileWebp.srcset =
+    `https://i.ytimg.com/vi_webp/${video.id}/mqdefault.webp`;
+
+  const image = document.createElement("img");
+
+  // Keep the high-resolution thumbnail on larger screens
+  image.src = video.thumbnail;
+
+  image.alt = `Watch ${video.title} on YouTube`;
+
+  // Latest Release is below the first viewport,
+  // so there is no reason to download it immediately
+  image.loading = "lazy";
+  image.decoding = "async";
+
+  // Reserve the correct 16:9 space before the image loads
+  image.width = 1280;
+  image.height = 720;
+
+  image.style.width = "100%";
+  image.style.height = "auto";
+  image.style.aspectRatio = "16 / 9";
+  image.style.objectFit = "cover";
+  image.style.display = "block";
+
+  picture.append(mobileWebp, image);
+
+  return picture;
+}
+
+// Create optimized thumbnails for the Music page
+function createGalleryThumbnail(video, index) {
+  const picture = document.createElement("picture");
+
+  picture.style.display = "block";
+  picture.style.width = "100%";
+
+  const webpSource = document.createElement("source");
+
+  webpSource.type = "image/webp";
+  webpSource.srcset =
+    `https://i.ytimg.com/vi_webp/${video.id}/mqdefault.webp`;
+
+  const image = document.createElement("img");
+
+  // JPEG fallback if WebP cannot be displayed
+  image.src =
+    `https://i.ytimg.com/vi/${video.id}/mqdefault.jpg`;
+
+  image.alt = video.title;
+  image.decoding = "async";
+
+  image.width = 320;
+  image.height = 180;
+
+  // Load only the first few thumbnails immediately
+  if (index > 2) {
+    image.loading = "lazy";
+  } else {
+    image.loading = "eager";
+  }
+
+  picture.append(webpSource, image);
+
+  return picture;
+}
+
 // Render latest release on the home page
 // Clicking the preview opens the video directly on YouTube
 function renderLatestVideo(video) {
@@ -44,6 +123,7 @@ function renderLatestVideo(video) {
   videoLink.href = video.url;
   videoLink.target = "_blank";
   videoLink.rel = "noopener noreferrer";
+
   videoLink.setAttribute(
     "aria-label",
     `Watch ${video.title} on YouTube`
@@ -57,19 +137,7 @@ function renderLatestVideo(video) {
   const thumbnailContainer = document.createElement("div");
   thumbnailContainer.className = "video-thumbnail";
 
-  const image = document.createElement("img");
-
-  image.src = video.thumbnail;
-  image.alt = `Watch ${video.title} on YouTube`;
-  image.loading = "eager";
-  image.decoding = "async";
-  image.fetchPriority = "high";
-
-  image.style.width = "100%";
-  image.style.height = "auto";
-  image.style.aspectRatio = "16 / 9";
-  image.style.objectFit = "cover";
-  image.style.display = "block";
+  const picture = createLatestThumbnail(video);
 
   const overlay = document.createElement("div");
   overlay.className = "play-overlay";
@@ -83,7 +151,7 @@ function renderLatestVideo(video) {
 
   overlay.appendChild(playButton);
 
-  thumbnailContainer.append(image, overlay);
+  thumbnailContainer.append(picture, overlay);
   videoLink.appendChild(thumbnailContainer);
 
   const info = document.createElement("div");
@@ -93,10 +161,12 @@ function renderLatestVideo(video) {
   title.textContent = video.title;
 
   const description = document.createElement("p");
+
   description.textContent =
     video.description || "Watch the latest release on YouTube.";
 
   const youtubeNotice = document.createElement("p");
+
   youtubeNotice.textContent = "Watch on YouTube";
   youtubeNotice.style.marginTop = "0.75rem";
   youtubeNotice.style.color = "var(--primary-color)";
@@ -126,6 +196,7 @@ function renderVideoGallery(videos) {
     link.href = video.url;
     link.target = "_blank";
     link.rel = "noopener noreferrer";
+
     link.setAttribute(
       "aria-label",
       `Watch ${video.title} on YouTube`
@@ -134,15 +205,7 @@ function renderVideoGallery(videos) {
     const thumbnailContainer = document.createElement("div");
     thumbnailContainer.className = "video-thumbnail";
 
-    const image = document.createElement("img");
-
-    image.src = video.thumbnail;
-    image.alt = video.title;
-    image.decoding = "async";
-
-    if (index > 2) {
-      image.loading = "lazy";
-    }
+    const picture = createGalleryThumbnail(video, index);
 
     const overlay = document.createElement("div");
     overlay.className = "play-overlay";
@@ -153,7 +216,7 @@ function renderVideoGallery(videos) {
 
     overlay.appendChild(playButton);
 
-    thumbnailContainer.append(image, overlay);
+    thumbnailContainer.append(picture, overlay);
     link.appendChild(thumbnailContainer);
 
     const info = document.createElement("div");
@@ -163,6 +226,7 @@ function renderVideoGallery(videos) {
     title.textContent = video.title;
 
     const description = document.createElement("p");
+
     description.textContent =
       video.description || "Watch on YouTube.";
 
